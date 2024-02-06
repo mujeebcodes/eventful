@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Organizer {
+  id String @unique @default(uuid())
+  organizationName String
+  logo String
+  email String @unique
+  phone String
+  password String
+  bio String
+  events Event[]
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt()
+}
+
+model User {
+  id String @unique @default(uuid())
+  firstname String
+  lastname String
+  email String @unique
+  password String
+  enrollments Enrollment[]
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt()
+}
+
+model Event {
+  id String @unique @default(uuid())
+  title String
+  description String
+  venue String
+  when DateTime
+  availableTickets Int
+  eventStatus Status
+  category String
+  organizer Organizer @relation(fields: [organizerId], references: [id])
+  organizerId String
+  participants Enrollment[]
+  createdAt DateTime @default(now())
+  updateAt DateTime @updatedAt()
+}
+
+model Enrollment {
+  id String @unique @default(uuid())
+  user User @relation(fields: [userId], references: [id])
+  userId String
+  event Event @relation(fields: [eventId], references: [id])
+  eventId String
+  enrollmentDate DateTime @default(now())
+  qrCode String
+}
+
+enum Status {
+  scheduled
+  completed
+}

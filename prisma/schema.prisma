@@ -20,7 +20,7 @@ model Organizer {
   bio String
   events Event[]
   createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt()
+  updatedAt DateTime @updatedAt()
 }
 
 model User {

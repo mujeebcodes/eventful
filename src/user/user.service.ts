@@ -6,7 +6,6 @@ import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { jwtSecret } from 'src/utils/constants';
-import { Response } from 'express';
 
 @Injectable()
 export class UserService {
@@ -65,6 +64,7 @@ export class UserService {
     const token = await this.signToken({
       userId: existingUser.id,
       email: existingUser.email,
+      role: 'user',
     });
 
     res.cookie('token', token, { httpOnly: true });
@@ -88,15 +88,15 @@ export class UserService {
     return `This action removes a #${id} user`;
   }
 
-  private async hashPassword(password: string) {
+  async hashPassword(password: string) {
     return await bcrypt.hash(password, 10);
   }
 
-  private async comparePassword(password, hashedPassword) {
+  async comparePassword(password, hashedPassword) {
     return await bcrypt.compare(password, hashedPassword);
   }
 
-  async signToken(args: { userId: string; email: string }) {
+  async signToken(args: { userId: string; email: string; role: string }) {
     const payload = {
       id: args.userId,
       email: args.email,
@@ -104,6 +104,7 @@ export class UserService {
 
     const token = await this.jwt.signAsync(payload, {
       secret: jwtSecret,
+      expiresIn: '1h',
     });
 
     return token;

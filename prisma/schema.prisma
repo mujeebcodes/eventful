@@ -31,7 +31,7 @@ model User {
   password String
   enrollments Enrollment[]
   createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt()
+  updatedAt DateTime @updatedAt()
 }
 
 model Event {
@@ -47,7 +47,7 @@ model Event {
   organizerId String
   participants Enrollment[]
   createdAt DateTime @default(now())
-  updateAt DateTime @updatedAt()
+  updatedAt DateTime @updatedAt()
 }
 
 model Enrollment {

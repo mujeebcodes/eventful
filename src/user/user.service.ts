@@ -5,7 +5,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import { jwtSecret } from 'src/utils/constants';
 
 @Injectable()
 export class UserService {
@@ -61,7 +60,7 @@ export class UserService {
       );
     }
 
-    const token = await this.signToken({
+    const token = this.signToken({
       userId: existingUser.id,
       email: existingUser.email,
       role: 'user',
@@ -76,8 +75,8 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async getProfile(id: string) {
+    return await this.prismaService.user.findUnique({ where: { id } });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
@@ -96,16 +95,14 @@ export class UserService {
     return await bcrypt.compare(password, hashedPassword);
   }
 
-  async signToken(args: { userId: string; email: string; role: string }) {
+  signToken(args: { userId: string; email: string; role: string }) {
     const payload = {
       id: args.userId,
       email: args.email,
+      role: args.role,
     };
 
-    const token = await this.jwt.signAsync(payload, {
-      secret: jwtSecret,
-      expiresIn: '1h',
-    });
+    const token = this.jwt.sign(payload);
 
     return token;
   }

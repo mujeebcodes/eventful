@@ -1,7 +1,6 @@
 import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
 import { CreateOrganizerDto } from './dto/create-organizer.dto';
 import { LoginOrganizerDto } from './dto/login-organizer.dto';
-import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { UpdateOrganizerDto } from './dto/update-organizer.dto';
@@ -11,7 +10,6 @@ import { Response } from 'express';
 export class OrganizerService {
   constructor(
     private readonly prismaService: PrismaService,
-    private readonly jwt: JwtService,
     private readonly userService: UserService,
   ) {}
 

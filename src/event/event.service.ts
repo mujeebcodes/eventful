@@ -7,10 +7,7 @@ import { OrganizerService } from 'src/organizer/organizer.service';
 
 @Injectable()
 export class EventService {
-  constructor(
-    private readonly prismaService: PrismaService,
-    private readonly organizerService: OrganizerService,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async createEvent(user: UserDecoratorType, createEventDto: CreateEventDto) {
     if (user.role !== 'organizer') {
@@ -122,5 +119,36 @@ export class EventService {
 
     await this.prismaService.event.delete({ where: { id: eventId } });
     return { message: 'Event cancelled successfully' };
+  }
+
+  async enrollUser(currentUser: UserDecoratorType, eventId: string) {
+    if (currentUser.role !== 'user') {
+      throw new HttpException('Unauthorized to enroll', HttpStatus.FORBIDDEN);
+    }
+    const event = await this.prismaService.event.findUnique({
+      where: { id: eventId },
+    });
+
+    const user = await this.prismaService.user.findUnique({
+      where: { id: currentUser.id },
+    });
+
+    if (!event || !user) {
+      throw new HttpException(
+        'Invalid Event/User',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    await this.prismaService.enrollment.create({
+      data: { userId: currentUser.id, eventId, qrCode: '' },
+    });
+
+    await this.prismaService.event.update({
+      where: { id: eventId },
+      data: { availableTickets: event.availableTickets - 1 },
+    });
+
+    return { message: 'User enrolled successfully' };
   }
 }

@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   UseGuards,
-  Put,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -27,6 +26,15 @@ export class EventController {
     @Body() createEventDto: CreateEventDto,
   ) {
     return this.eventService.createEvent(user, createEventDto);
+  }
+
+  @Post(':id/enroll')
+  @UseGuards(JwtAuthGuard)
+  enrollUser(
+    @User() currentUser: UserDecoratorType,
+    @Param('id') eventId: string,
+  ) {
+    return this.eventService.enrollUser(currentUser, eventId);
   }
 
   @Get()

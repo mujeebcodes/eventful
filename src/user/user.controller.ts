@@ -15,6 +15,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { User } from 'src/decorators/user.decorator';
 
 @Controller('users')
 export class UserController {
@@ -36,9 +37,20 @@ export class UserController {
   }
 
   @Get(':id')
-  async getProfile(@Param('id') id: string) {
-    return await this.userService.getProfile(id);
+  @UseGuards(JwtAuthGuard)
+  async getProfile(@User('id') currentUserId: string) {
+    return await this.userService.getProfile(currentUserId);
   }
+
+  @Get('enrollments/:id')
+  @UseGuards(JwtAuthGuard)
+  getEnrollment(
+    @Param('id') enrollId: string,
+    @User('id') currentUserId: string,
+  ) {
+    return this.userService.getEnrollment(enrollId, currentUserId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {

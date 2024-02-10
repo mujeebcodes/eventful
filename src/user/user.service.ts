@@ -5,6 +5,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class UserService {
@@ -75,8 +76,53 @@ export class UserService {
     return `This action returns all user`;
   }
 
-  async getProfile(id: string) {
-    return await this.prismaService.user.findUnique({ where: { id } });
+  async getProfile(currentUserId: string) {
+    const user = await this.prismaService.user.findUnique({
+      where: { id: currentUserId },
+      select: {
+        id: true,
+        firstname: true,
+        lastname: true,
+        email: true,
+        enrollments: true,
+        createdAt: true,
+      },
+    });
+
+    if (currentUserId !== user.id) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    return user;
+  }
+
+  async getEnrollment(enrolId: string, currentUserId: string) {
+    const enrollment = await this.prismaService.enrollment.findUnique({
+      where: { id: enrolId },
+      select: {
+        id: true,
+        userId: true,
+        user: true,
+        event: true,
+        enrollmentDate: true,
+      },
+    });
+
+    if (currentUserId !== enrollment.userId) {
+      throw new HttpException(
+        'Unauthorized to view this enrollment',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    const verificationData = {
+      attendeeName: `${enrollment.user.firstname} ${enrollment.user.lastname}`,
+      attendeeEmail: enrollment.user.email,
+      eventName: enrollment.event.title,
+      enrollmentDate: enrollment.enrollmentDate,
+      scanned: false,
+    };
+    const accessQRCode = await this.generateQRCode(verificationData);
+    return { ...enrollment, QRCode: accessQRCode };
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
@@ -105,5 +151,18 @@ export class UserService {
     const token = this.jwt.sign(payload);
 
     return token;
+  }
+
+  async generateQRCode(data) {
+    try {
+      const qrCode = await QRCode.toDataURL(JSON.stringify(data));
+      const imageData = qrCode.split(',')[1];
+      return imageData;
+    } catch (err) {
+      throw new HttpException(
+        'Unable to generate QR code',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

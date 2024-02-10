@@ -3,7 +3,6 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 import { PrismaService } from 'prisma/prisma.service';
-import { OrganizerService } from 'src/organizer/organizer.service';
 
 @Injectable()
 export class EventService {
@@ -127,6 +126,7 @@ export class EventService {
     }
     const event = await this.prismaService.event.findUnique({
       where: { id: eventId },
+      select: { title: true, availableTickets: true, participants: true },
     });
 
     const user = await this.prismaService.user.findUnique({
@@ -140,8 +140,27 @@ export class EventService {
       );
     }
 
+    const isTicketAvailable = event.availableTickets > 0;
+    if (!isTicketAvailable) {
+      throw new HttpException(
+        'Event sold out',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    const alreadyEnrolled = event.participants.find(
+      (participant) => currentUser.id === participant.userId,
+    );
+
+    if (alreadyEnrolled) {
+      throw new HttpException(
+        'User already enrolled in this event',
+        HttpStatus.CONFLICT,
+      );
+    }
+
     await this.prismaService.enrollment.create({
-      data: { userId: currentUser.id, eventId, qrCode: '' },
+      data: { userId: currentUser.id, eventId },
     });
 
     await this.prismaService.event.update({
@@ -149,6 +168,6 @@ export class EventService {
       data: { availableTickets: event.availableTickets - 1 },
     });
 
-    return { message: 'User enrolled successfully' };
+    return { message: 'User enrolled successfully in event' };
   }
 }

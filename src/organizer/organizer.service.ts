@@ -5,6 +5,9 @@ import { PrismaService } from 'prisma/prisma.service';
 import { UserService } from 'src/user/user.service';
 import { UpdateOrganizerDto } from './dto/update-organizer.dto';
 import { Response } from 'express';
+import { cloudinary } from 'src/imageUploads/cloudinary.config';
+import { promises as fsPromises } from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class OrganizerService {
@@ -13,7 +16,10 @@ export class OrganizerService {
     private readonly userService: UserService,
   ) {}
 
-  async createOrganizer(createOrganizerDto: CreateOrganizerDto) {
+  async createOrganizer(
+    logo: Express.Multer.File,
+    createOrganizerDto: CreateOrganizerDto,
+  ) {
     try {
       const existingOrganizer = await this.prismaService.organizer.findUnique({
         where: { email: createOrganizerDto.email },
@@ -25,9 +31,25 @@ export class OrganizerService {
           HttpStatus.UNPROCESSABLE_ENTITY,
         );
       }
+      let logoUrl =
+        'https://res.cloudinary.com/dpsoua8bk/image/upload/v1707606375/0d64989794b1a4c9d89bff571d3d5842_y8cymq.jpg';
+      if (logo) {
+        const tempFilePath = path.join(
+          __dirname,
+          '../imageUploads/tempFile.png',
+        );
+
+        await fsPromises.writeFile(tempFilePath, logo.buffer);
+        const logoUpload = await cloudinary.uploader.upload(tempFilePath, {
+          resource_type: 'auto',
+        });
+
+        logoUrl = logoUpload.secure_url;
+      }
 
       const newOrganizer = {
         ...createOrganizerDto,
+        logo: logoUrl,
         password: await this.userService.hashPassword(
           createOrganizerDto.password,
         ),
@@ -37,6 +59,7 @@ export class OrganizerService {
 
       return { message: 'Organizer created successfully' };
     } catch (error) {
+      console.log(error);
       throw new HttpException(
         'Unable to sign up',
         HttpStatus.UNPROCESSABLE_ENTITY,

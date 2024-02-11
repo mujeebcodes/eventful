@@ -38,6 +38,7 @@ model Event {
   id String @unique @default(uuid())
   title String
   description String
+  eventImg String
   venue String
   when DateTime
   availableTickets Int

@@ -7,20 +7,31 @@ import {
   Param,
   Delete,
   Res,
+  UseInterceptors,
+  UploadedFile,
+  Req,
 } from '@nestjs/common';
 import { OrganizerService } from './organizer.service';
 import { CreateOrganizerDto } from './dto/create-organizer.dto';
 import { LoginOrganizerDto } from './dto/login-organizer.dto';
 import { UpdateOrganizerDto } from './dto/update-organizer.dto';
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('organizers')
 export class OrganizerController {
   constructor(private readonly organizerService: OrganizerService) {}
 
   @Post('signup')
-  async create(@Body() createOrganizerDto: CreateOrganizerDto) {
-    return await this.organizerService.createOrganizer(createOrganizerDto);
+  @UseInterceptors(FileInterceptor('logo'))
+  async create(
+    @UploadedFile() logo: Express.Multer.File,
+    @Body() createOrganizerDto: CreateOrganizerDto,
+  ) {
+    return await this.organizerService.createOrganizer(
+      logo,
+      createOrganizerDto,
+    );
   }
 
   @Post('login')

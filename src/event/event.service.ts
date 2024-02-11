@@ -3,12 +3,19 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 import { PrismaService } from 'prisma/prisma.service';
+import { promises as fsPromises } from 'fs';
+import * as path from 'path';
+import { cloudinary } from 'src/imageUploads/cloudinary.config';
 
 @Injectable()
 export class EventService {
   constructor(private readonly prismaService: PrismaService) {}
 
-  async createEvent(user: UserDecoratorType, createEventDto: CreateEventDto) {
+  async createEvent(
+    user: UserDecoratorType,
+    eventImg: Express.Multer.File,
+    createEventDto: CreateEventDto,
+  ) {
     if (user.role !== 'organizer') {
       throw new HttpException(
         'Unauthorized to create events',
@@ -19,12 +26,29 @@ export class EventService {
       where: { id: user.id },
     });
 
+    if (!eventImg) {
+      throw new HttpException(
+        'Event must have an image/poster',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const tempFilePath = path.join(__dirname, '../imageUploads/tempFile.png');
+
+    await fsPromises.writeFile(tempFilePath, eventImg.buffer);
+    const logoUpload = await cloudinary.uploader.upload(tempFilePath, {
+      resource_type: 'auto',
+    });
+
+    const imgUrl = logoUpload.secure_url;
+
     const newEvent = {
       title: createEventDto.title,
       description: createEventDto.description,
+      eventImg: imgUrl,
       venue: createEventDto.venue,
       when: new Date(createEventDto.when),
-      availableTickets: createEventDto.availableTickets,
+      availableTickets: +createEventDto.availableTickets,
       eventStatus: createEventDto.eventStatus,
       category: createEventDto.category,
       organizerId: organizer.id,

@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -14,6 +16,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { User } from 'src/decorators/user.decorator';
 import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @Controller('events')
 export class EventController {
@@ -21,11 +24,13 @@ export class EventController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('eventImg'))
   createEvent(
     @User() user: UserDecoratorType,
+    @UploadedFile() eventImg: Express.Multer.File,
     @Body() createEventDto: CreateEventDto,
   ) {
-    return this.eventService.createEvent(user, createEventDto);
+    return this.eventService.createEvent(user, eventImg, createEventDto);
   }
 
   @Post(':id/enroll')

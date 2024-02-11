@@ -6,8 +6,7 @@ export class CreateOrganizerDto {
   readonly organizationName: string;
 
   @IsOptional()
-  @IsString({ message: 'Logo must be a string' })
-  readonly logo: string;
+  readonly logo: Express.Multer.File;
 
   @IsNotEmpty({ message: 'Email cannot be empty' })
   @IsEmail({}, { message: 'Invalid email format' })

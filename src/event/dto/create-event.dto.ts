@@ -30,8 +30,6 @@ export class CreateEventDto {
   readonly when: string;
 
   @IsNotEmpty({ message: 'Available tickets cannot be empty' })
-  @IsInt({ message: 'Available tickets must be an integer' })
-  @Min(0, { message: 'Available tickets must be greater than or equal to 0' })
   readonly availableTickets: number;
 
   @IsNotEmpty({ message: 'Event status cannot be empty' })

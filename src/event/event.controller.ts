@@ -38,8 +38,9 @@ export class EventController {
   enrollUser(
     @User() currentUser: UserDecoratorType,
     @Param('id') eventId: string,
+    @Body('whenToRemind') whenToRemind: string,
   ) {
-    return this.eventService.enrollUser(currentUser, eventId);
+    return this.eventService.enrollUser(currentUser, eventId, whenToRemind);
   }
 
   @Get()

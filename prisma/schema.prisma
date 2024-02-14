@@ -58,6 +58,7 @@ model Enrollment {
   event Event @relation(fields: [eventId], references: [id])
   eventId String
   enrollmentDate DateTime @default(now())
+  whenToRemind String
 }
 
 enum Status {

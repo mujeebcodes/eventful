@@ -144,7 +144,11 @@ export class EventService {
     return { message: 'Event cancelled successfully' };
   }
 
-  async enrollUser(currentUser: UserDecoratorType, eventId: string) {
+  async enrollUser(
+    currentUser: UserDecoratorType,
+    eventId: string,
+    whenToRemind: string,
+  ) {
     if (currentUser.role !== 'user') {
       throw new HttpException('Unauthorized to enroll', HttpStatus.FORBIDDEN);
     }
@@ -184,7 +188,7 @@ export class EventService {
     }
 
     await this.prismaService.enrollment.create({
-      data: { userId: currentUser.id, eventId },
+      data: { userId: currentUser.id, eventId, whenToRemind },
     });
 
     await this.prismaService.event.update({

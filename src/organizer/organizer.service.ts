@@ -119,4 +119,6 @@ export class OrganizerService {
   remove(id: number) {
     return `This action removes a #${id} organizer`;
   }
+
+  async getAnalytics() {}
 }

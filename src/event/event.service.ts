@@ -202,4 +202,43 @@ export class EventService {
 
     return { message: 'User enrolled successfully in event' };
   }
+
+  async checkInUser(eventId: string, userId: string, enrollmentId: string) {
+    const enrollment = await this.prismaService.enrollment.findUnique({
+      where: { id: enrollmentId },
+      select: { userId: true, event: true, eventId: true },
+    });
+
+    if (!enrollment) {
+      throw new HttpException('Invalid enrollment', HttpStatus.NOT_FOUND);
+    }
+
+    if (enrollment.eventId !== eventId && enrollment.userId !== userId) {
+      throw new HttpException('Invalid enrollment', HttpStatus.UNAUTHORIZED);
+    }
+
+    const currentDate = new Date();
+    const eventDate = new Date(enrollment.event.when);
+
+    if (!this.isSameDay(currentDate, eventDate)) {
+      throw new HttpException(
+        'Cannot check in before/after event date',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    await this.prismaService.enrollment.update({
+      where: { id: enrollmentId },
+      data: { QRCodeScanned: true },
+    });
+
+    return { message: 'User checked in successfully to event' };
+  }
+
+  isSameDay(date1: Date, date2: Date): boolean {
+    return (
+      date1.getFullYear() === date2.getFullYear() &&
+      date1.getMonth() === date2.getMonth() &&
+      date1.getDate() === date2.getDate()
+    );
+  }
 }

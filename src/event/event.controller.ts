@@ -73,6 +73,15 @@ export class EventController {
     );
   }
 
+  @Patch('checkin/:eventId/:userId/:enrollmentId')
+  checkInUser(
+    @Param('eventId') eventId: string,
+    @Param('userId') userId: string,
+    @Param('enrollmentId') enrollmentId: string,
+  ) {
+    return this.eventService.checkInUser(eventId, userId, enrollmentId);
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   cancelEvent(

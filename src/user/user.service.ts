@@ -114,14 +114,8 @@ export class UserService {
       );
     }
 
-    const verificationData = {
-      attendeeName: `${enrollment.user.firstname} ${enrollment.user.lastname}`,
-      attendeeEmail: enrollment.user.email,
-      eventName: enrollment.event.title,
-      enrollmentDate: enrollment.enrollmentDate,
-      scanned: false,
-    };
-    const accessQRCode = await this.generateQRCode(verificationData);
+    const checkinURL = `/events/checkin/${enrollment.event.id}/${enrollment.userId}/${enrollment.id}`;
+    const accessQRCode = await this.generateQRCode(checkinURL);
     return { ...enrollment, QRCode: accessQRCode };
   }
 
@@ -172,9 +166,9 @@ export class UserService {
     return token;
   }
 
-  async generateQRCode(data) {
+  async generateQRCode(url) {
     try {
-      const qrCode = await QRCode.toDataURL(JSON.stringify(data));
+      const qrCode = await QRCode.toDataURL(url);
       const imageData = qrCode.split(',')[1];
       return imageData;
     } catch (err) {

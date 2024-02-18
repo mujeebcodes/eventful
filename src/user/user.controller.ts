@@ -8,6 +8,7 @@ import {
   Delete,
   Res,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,6 +17,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { User } from 'src/decorators/user.decorator';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('users')
 export class UserController {
@@ -38,12 +40,14 @@ export class UserController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(CacheInterceptor)
   async getProfile(@User('id') currentUserId: string) {
     return await this.userService.getProfile(currentUserId);
   }
 
   @Get('enrollments/:id')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(CacheInterceptor)
   getEnrollment(
     @Param('id') enrollId: string,
     @User('id') currentUserId: string,
@@ -51,14 +55,26 @@ export class UserController {
     return this.userService.getEnrollment(enrollId, currentUserId);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  @UseGuards(JwtAuthGuard)
+  updateUserProfile(
+    @Param('id') userId: string,
+    @User('id') currentUserId: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.updateUserProfile(
+      userId,
+      currentUserId,
+      updateUserDto,
+    );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @UseGuards(JwtAuthGuard)
+  deleteUserAccount(
+    @Param('id') userId: string,
+    @User('id') currentUserId: string,
+  ) {
+    return this.userService.deleteUserAccount(userId, currentUserId);
   }
 }

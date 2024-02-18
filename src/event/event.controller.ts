@@ -17,6 +17,8 @@ import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { User } from 'src/decorators/user.decorator';
 import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { SkipThrottle } from '@nestjs/throttler';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('events')
 export class EventController {
@@ -43,11 +45,15 @@ export class EventController {
     return this.eventService.enrollUser(currentUser, eventId, whenToRemind);
   }
 
+  @SkipThrottle()
+  @UseInterceptors(CacheInterceptor)
   @Get()
   findAll() {
     return this.eventService.getAllEvents();
   }
 
+  @SkipThrottle()
+  @UseInterceptors(CacheInterceptor)
   @Get(':id')
   getEvent(@Param('id') id: string) {
     return this.eventService.getEvent(id);

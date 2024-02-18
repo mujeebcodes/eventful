@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable, Res } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateOrganizerDto } from './dto/create-organizer.dto';
 import { LoginOrganizerDto } from './dto/login-organizer.dto';
 import { PrismaService } from 'prisma/prisma.service';
@@ -8,6 +8,9 @@ import { Response } from 'express';
 import { cloudinary } from 'src/imageUploads/cloudinary.config';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
+import { EventType, OrganizerEventsType } from './types/organizerEvent.type';
+import { Enrollment } from '@prisma/client';
+import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 
 @Injectable()
 export class OrganizerService {
@@ -67,10 +70,7 @@ export class OrganizerService {
     }
   }
 
-  async loginOrganizer(
-    loginOrganizerDto: LoginOrganizerDto,
-    @Res({ passthrough: true }) res: Response,
-  ) {
+  async loginOrganizer(loginOrganizerDto: LoginOrganizerDto, res: Response) {
     const existingOrganizer = await this.prismaService.organizer.findUnique({
       where: { email: loginOrganizerDto.email },
     });
@@ -104,21 +104,113 @@ export class OrganizerService {
     return { message: 'Login successful' };
   }
 
-  findAll() {
-    return `This action returns all organizer`;
+  async getOrganizerAnalytics(
+    organizerId: string,
+    currentOrganizer: UserDecoratorType,
+  ) {
+    if (organizerId !== currentOrganizer.id) {
+      throw new HttpException(
+        'Not authorized to access this route',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    const organizer: OrganizerEventsType =
+      await this.prismaService.organizer.findUnique({
+        where: { id: organizerId },
+        select: { events: { include: { participants: true } } },
+      });
+
+    const allTimeEnrollments = organizer.events.reduce(
+      (totalEnrollments, event: EventType) => {
+        if (event.participants && Array.isArray(event.participants)) {
+          totalEnrollments += event.participants.length;
+        }
+        return totalEnrollments;
+      },
+      0,
+    );
+
+    const individualEventsStats: Record<
+      string,
+      { totalEnrollment: number; scannedIn: number }
+    > = {};
+
+    organizer.events.forEach((event: EventType) => {
+      const totalEnrollment = event.participants?.length || 0;
+      const scannedIn =
+        event.participants?.filter(
+          (enrollment: Enrollment) => enrollment.QRCodeScanned,
+        ).length || 0;
+
+      individualEventsStats[event.title] = { totalEnrollment, scannedIn };
+    });
+    const organizerAnalytics = {
+      totalEventsOrganized: organizer.events.length,
+      allTimeEnrollments,
+      individualEventsStats,
+    };
+
+    return { organizerAnalytics };
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} organizer`;
+  getOrganizerProfile(organizerId: string) {
+    return this.prismaService.organizer.findUnique({
+      where: { id: organizerId },
+      select: {
+        organizationName: true,
+        logo: true,
+        email: true,
+        phone: true,
+        bio: true,
+        events: true,
+      },
+    });
   }
 
-  update(id: number, updateOrganizerDto: UpdateOrganizerDto) {
-    return `This action updates a #${id} organizer`;
+  async updateOrganizerProfile(
+    organizerId: string,
+    currentOrganizerId: string,
+    logo: Express.Multer.File,
+    updateOrganizerDto: UpdateOrganizerDto,
+  ) {
+    if (organizerId !== currentOrganizerId) {
+      throw new HttpException(
+        'Unauthorized to make this change',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    let logoUrl;
+    if (logo) {
+      const tempFilePath = path.join(__dirname, '../imageUploads/tempFile.png');
+
+      await fsPromises.writeFile(tempFilePath, logo.buffer);
+      const logoUpload = await cloudinary.uploader.upload(tempFilePath, {
+        resource_type: 'auto',
+      });
+
+      logoUrl = logoUpload.secure_url;
+    }
+
+    await this.prismaService.organizer.update({
+      where: { id: organizerId },
+      data: {
+        ...updateOrganizerDto,
+        ...(logoUrl && { logo: logoUrl }),
+      },
+    });
+
+    return { message: 'account updated successfully' };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} organizer`;
-  }
+  async deleteAccount(organizerId, currentOrganizerId) {
+    if (organizerId !== currentOrganizerId) {
+      throw new HttpException(
+        'Unauthorized to make this change',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
 
-  async getAnalytics() {}
+    await this.prismaService.organizer.delete({ where: { id: organizerId } });
+    return { message: 'account deleted successfully' };
+  }
 }

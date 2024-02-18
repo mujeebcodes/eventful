@@ -9,14 +9,18 @@ import {
   Res,
   UseInterceptors,
   UploadedFile,
-  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { OrganizerService } from './organizer.service';
 import { CreateOrganizerDto } from './dto/create-organizer.dto';
 import { LoginOrganizerDto } from './dto/login-organizer.dto';
 import { UpdateOrganizerDto } from './dto/update-organizer.dto';
-import { Response, Request } from 'express';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { User } from 'src/decorators/user.decorator';
+import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Controller('organizers')
 export class OrganizerController {
@@ -42,26 +46,48 @@ export class OrganizerController {
     return await this.organizerService.loginOrganizer(loginOrganizerDto, res);
   }
 
-  @Get()
-  findAll() {
-    return this.organizerService.findAll();
+  @Get('id')
+  @UseInterceptors(CacheInterceptor)
+  getProfile(@Param('id') organizerId: string) {
+    return this.organizerService.getOrganizerProfile(organizerId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.organizerService.findOne(+id);
+  @Get(':id/analytics')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(CacheInterceptor)
+  async getOrganizerAnalytics(
+    @Param('id') organizerId: string,
+    @User() currentOrganizer: UserDecoratorType,
+  ) {
+    return await this.organizerService.getOrganizerAnalytics(
+      organizerId,
+      currentOrganizer,
+    );
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('logo'))
+  updateOrganizerProfile(
+    @Param('id') organizerId: string,
+    @User('id') currentOrganizerId: string,
+    @UploadedFile() logo: Express.Multer.File,
     @Body() updateOrganizerDto: UpdateOrganizerDto,
   ) {
-    return this.organizerService.update(+id, updateOrganizerDto);
+    return this.organizerService.updateOrganizerProfile(
+      organizerId,
+      currentOrganizerId,
+      logo,
+      updateOrganizerDto,
+    );
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.organizerService.remove(+id);
+  @UseGuards(JwtAuthGuard)
+  deleteAccount(
+    @Param('id') organizerId: string,
+    @User('id') currentOrganizerId: string,
+  ) {
+    return this.organizerService.deleteAccount(organizerId, currentOrganizerId);
   }
 }

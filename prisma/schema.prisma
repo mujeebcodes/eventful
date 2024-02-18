@@ -59,6 +59,7 @@ model Enrollment {
   eventId String
   enrollmentDate DateTime @default(now())
   whenToRemind String
+  QRCodeScanned Boolean @default(false)
 }
 
 enum Status {

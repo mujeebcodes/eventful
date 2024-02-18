@@ -125,12 +125,31 @@ export class UserService {
     return { ...enrollment, QRCode: accessQRCode };
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async updateUserProfile(userId, currentUserId, updateUserDto: UpdateUserDto) {
+    if (userId !== currentUserId) {
+      throw new HttpException(
+        'Unauthorized to make this change',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    await this.prismaService.user.update({
+      where: { id: userId },
+      data: updateUserDto,
+    });
+
+    return { message: 'account updated successfully' };
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async deleteUserAccount(userId, currentUserId) {
+    if (userId !== currentUserId) {
+      throw new HttpException(
+        'Unauthorized to make this change',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+    await this.prismaService.user.delete({ where: { id: userId } });
+    return { message: 'account deleted successfully' };
   }
 
   async hashPassword(password: string) {

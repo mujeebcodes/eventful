@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
@@ -6,10 +6,14 @@ import { PrismaService } from 'prisma/prisma.service';
 import { promises as fsPromises } from 'fs';
 import * as path from 'path';
 import { cloudinary } from 'src/imageUploads/cloudinary.config';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class EventService {
-  constructor(private readonly prismaService: PrismaService) {}
+  constructor(
+    private readonly prismaService: PrismaService,
+    @Inject('CACHE_MANAGER') private cacheManager: Cache,
+  ) {}
 
   async createEvent(
     user: UserDecoratorType,

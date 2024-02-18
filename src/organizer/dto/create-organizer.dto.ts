@@ -1,12 +1,9 @@
-import { IsEmail, IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateOrganizerDto {
   @IsNotEmpty({ message: 'Organization name cannot be empty' })
   @IsString({ message: 'Organization name must be a string' })
   readonly organizationName: string;
-
-  @IsOptional()
-  readonly logo: Express.Multer.File;
 
   @IsNotEmpty({ message: 'Email cannot be empty' })
   @IsEmail({}, { message: 'Invalid email format' })

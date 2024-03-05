@@ -42,6 +42,7 @@ export class EventService {
     await fsPromises.writeFile(tempFilePath, eventImg.buffer);
     const logoUpload = await cloudinary.uploader.upload(tempFilePath, {
       resource_type: 'auto',
+      folder: 'eventful/events',
     });
 
     const imgUrl = logoUpload.secure_url;
@@ -65,6 +66,7 @@ export class EventService {
       select: {
         id: true,
         title: true,
+        eventImg: true,
         description: true,
         venue: true,
         when: true,
@@ -88,6 +90,7 @@ export class EventService {
       select: {
         id: true,
         title: true,
+        eventImg: true,
         description: true,
         venue: true,
         when: true,

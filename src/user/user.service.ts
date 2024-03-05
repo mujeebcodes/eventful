@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { LoginUserDto } from './dto/login-user.dto';
 import { JwtService } from '@nestjs/jwt';
 import * as QRCode from 'qrcode';
+import { Response } from 'express';
 
 @Injectable()
 export class UserService {
@@ -38,7 +39,7 @@ export class UserService {
     }
   }
 
-  async login(loginUserDto: LoginUserDto, res) {
+  async login(loginUserDto: LoginUserDto, res: Response) {
     const existingUser = await this.prismaService.user.findUnique({
       where: { email: loginUserDto.email },
     });
@@ -67,7 +68,9 @@ export class UserService {
       role: 'user',
     });
 
-    res.cookie('token', token, { httpOnly: true });
+    res.cookie('token', token, {
+      httpOnly: false,
+    });
 
     return { message: 'Login successful' };
   }
@@ -92,7 +95,7 @@ export class UserService {
     if (currentUserId !== user.id) {
       throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
     }
-    return user;
+    return { ...user, role: 'user' };
   }
 
   async getEnrollment(enrolId: string, currentUserId: string) {

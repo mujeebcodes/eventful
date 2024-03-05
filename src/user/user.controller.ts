@@ -38,10 +38,11 @@ export class UserController {
     return await this.userService.login(loginUserDto, res);
   }
 
-  @Get(':id')
+  @Get('current-user')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(CacheInterceptor)
   async getProfile(@User('id') currentUserId: string) {
+    console.log(currentUserId);
     return await this.userService.getProfile(currentUserId);
   }
 

@@ -45,6 +45,7 @@ export class OrganizerService {
         await fsPromises.writeFile(tempFilePath, logo.buffer);
         const logoUpload = await cloudinary.uploader.upload(tempFilePath, {
           resource_type: 'auto',
+          folder: 'eventful',
         });
 
         logoUrl = logoUpload.secure_url;
@@ -99,7 +100,7 @@ export class OrganizerService {
       role: 'organizer',
     });
 
-    res.cookie('token', token, { httpOnly: true });
+    res.cookie('token', token, { httpOnly: false });
 
     return { message: 'Login successful' };
   }

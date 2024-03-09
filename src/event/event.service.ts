@@ -189,7 +189,7 @@ export class EventService {
 
     if (alreadyEnrolled) {
       throw new HttpException(
-        'User already enrolled in this event',
+        "You're already enrolled in this event",
         HttpStatus.CONFLICT,
       );
     }

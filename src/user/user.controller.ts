@@ -38,12 +38,27 @@ export class UserController {
     return await this.userService.login(loginUserDto, res);
   }
 
+  @Get(':id/logout')
+  @UseGuards(JwtAuthGuard)
+  logout(
+    @Param('id') userId: string,
+    @User('id') currentUserId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.userService.logout(userId, currentUserId, res);
+  }
+
   @Get('current-user')
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(CacheInterceptor)
   async getProfile(@User('id') currentUserId: string) {
-    console.log(currentUserId);
     return await this.userService.getProfile(currentUserId);
+  }
+
+  @Get('enrollments')
+  @UseGuards(JwtAuthGuard)
+  getUserEnrollments(@User('id') currentUserId: string) {
+    return this.userService.getUserEnrollments(currentUserId);
   }
 
   @Get('enrollments/:id')

@@ -21,6 +21,7 @@ import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { User } from 'src/decorators/user.decorator';
 import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @Controller('organizers')
 export class OrganizerController {
@@ -46,13 +47,29 @@ export class OrganizerController {
     return await this.organizerService.loginOrganizer(loginOrganizerDto, res);
   }
 
-  @Get('id')
+  @Get(':id/logout')
+  @UseGuards(JwtAuthGuard)
+  logout(
+    @Param('id') organizerId: string,
+    @User('id') currentOrganizerId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    return this.organizerService.logOutOrganizer(
+      organizerId,
+      currentOrganizerId,
+      res,
+    );
+  }
+
+  @Get(':id')
+  @SkipThrottle()
   @UseInterceptors(CacheInterceptor)
   getProfile(@Param('id') organizerId: string) {
     return this.organizerService.getOrganizerProfile(organizerId);
   }
 
   @Get(':id/analytics')
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(CacheInterceptor)
   async getOrganizerAnalytics(

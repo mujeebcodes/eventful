@@ -102,7 +102,23 @@ export class OrganizerService {
 
     res.cookie('token', token, { httpOnly: false });
 
-    return { message: 'Login successful' };
+    return { message: 'Login successful', organizerId: existingOrganizer.id };
+  }
+
+  logOutOrganizer(
+    organizerId: string,
+    currentOrganizerId: string,
+    res: Response,
+  ) {
+    if (organizerId !== currentOrganizerId) {
+      throw new HttpException(
+        'Not authorized to access this route',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    res.clearCookie('token');
+    return { message: 'Logged out successfully' };
   }
 
   async getOrganizerAnalytics(
@@ -158,6 +174,7 @@ export class OrganizerService {
     return this.prismaService.organizer.findUnique({
       where: { id: organizerId },
       select: {
+        id: true,
         organizationName: true,
         logo: true,
         email: true,

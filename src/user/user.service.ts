@@ -75,8 +75,12 @@ export class UserService {
     return { message: 'Login successful' };
   }
 
-  findAll() {
-    return `This action returns all user`;
+  logout(userId: string, currentUserId: string, res: Response) {
+    if (currentUserId !== userId) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
+    res.clearCookie('token');
+    return { msg: 'Logged out successfully' };
   }
 
   async getProfile(currentUserId: string) {
@@ -98,6 +102,24 @@ export class UserService {
     return { ...user, role: 'user' };
   }
 
+  async getUserEnrollments(currentUserId: string) {
+    const enrollments = await this.prismaService.enrollment.findMany({
+      where: { userId: currentUserId },
+      select: {
+        id: true,
+        userId: true,
+        user: true,
+        event: true,
+        enrollmentDate: true,
+      },
+    });
+
+    if (enrollments.length < 1) {
+      return { msg: 'You are currently not enrolled for any event' };
+    }
+
+    return enrollments;
+  }
   async getEnrollment(enrolId: string, currentUserId: string) {
     const enrollment = await this.prismaService.enrollment.findUnique({
       where: { id: enrolId },
@@ -172,8 +194,7 @@ export class UserService {
   async generateQRCode(url) {
     try {
       const qrCode = await QRCode.toDataURL(url);
-      const imageData = qrCode.split(',')[1];
-      return imageData;
+      return qrCode;
     } catch (err) {
       throw new HttpException(
         'Unable to generate QR code',

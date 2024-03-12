@@ -206,6 +206,43 @@ export class EventService {
     return { message: 'User enrolled successfully in event' };
   }
 
+  async cancelUserEnrollment(
+    currentUser: UserDecoratorType,
+    enrollmentId: string,
+  ) {
+    if (currentUser.role !== 'user') {
+      throw new HttpException('Unauthorized to enroll', HttpStatus.FORBIDDEN);
+    }
+
+    const enrollment = await this.prismaService.enrollment.findUnique({
+      where: { id: enrollmentId },
+    });
+
+    if (!enrollment) {
+      throw new HttpException('Enrollment not found', HttpStatus.NOT_FOUND);
+    }
+
+    if (enrollment.userId !== currentUser.id) {
+      throw new HttpException(
+        'Not aurthorized to cancel this enrollment',
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+
+    await this.prismaService.enrollment.delete({
+      where: { id: enrollmentId },
+    });
+    await this.prismaService.event.update({
+      where: { id: enrollment.eventId },
+      data: {
+        availableTickets: {
+          increment: 1,
+        },
+      },
+    });
+    return { message: 'enrollment cancelled successfully' };
+  }
+
   async checkInUser(eventId: string, userId: string, enrollmentId: string) {
     const enrollment = await this.prismaService.enrollment.findUnique({
       where: { id: enrollmentId },

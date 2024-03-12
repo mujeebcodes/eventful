@@ -45,6 +45,15 @@ export class EventController {
     return this.eventService.enrollUser(currentUser, eventId, whenToRemind);
   }
 
+  @Delete('enrollment/:id')
+  @UseGuards(JwtAuthGuard)
+  cancelUserEnrollment(
+    @User() currentUser: UserDecoratorType,
+    @Param('id') enrollmentId: string,
+  ) {
+    return this.eventService.cancelUserEnrollment(currentUser, enrollmentId);
+  }
+
   @SkipThrottle()
   @UseInterceptors(CacheInterceptor)
   @Get()

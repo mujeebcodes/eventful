@@ -70,6 +70,7 @@ export class UserService {
 
     res.cookie('token', token, {
       httpOnly: false,
+      secure: true,
     });
 
     return { message: 'Login successful' };

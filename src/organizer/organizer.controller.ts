@@ -22,7 +22,9 @@ import { User } from 'src/decorators/user.decorator';
 import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { SkipThrottle } from '@nestjs/throttler';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Event organizers')
 @Controller('organizers')
 export class OrganizerController {
   constructor(private readonly organizerService: OrganizerService) {}

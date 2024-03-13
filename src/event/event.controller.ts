@@ -19,7 +19,9 @@ import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Events')
 @Controller('events')
 export class EventController {
   constructor(private readonly eventService: EventService) {}

@@ -9,6 +9,8 @@ import {
   Res,
   UseGuards,
   UseInterceptors,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -18,11 +20,19 @@ import { Response } from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { User } from 'src/decorators/user.decorator';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import {
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @HttpCode(HttpStatus.CREATED)
   @Post('signup')
   async signup(
     @Body() createUserDto: CreateUserDto,
@@ -30,6 +40,13 @@ export class UserController {
     return await this.userService.signup(createUserDto);
   }
 
+  @ApiBody({ type: LoginUserDto })
+  @ApiOkResponse({
+    headers: {
+      'Set-Cookie': { description: 'JWT cookie', schema: { type: 'string' } },
+    },
+  })
+  @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(
     @Body() loginUserDto: LoginUserDto,

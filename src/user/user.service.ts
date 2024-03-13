@@ -71,6 +71,7 @@ export class UserService {
     res.cookie('token', token, {
       httpOnly: false,
       secure: true,
+      sameSite: 'none',
     });
 
     return { message: 'Login successful' };

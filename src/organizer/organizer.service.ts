@@ -100,7 +100,11 @@ export class OrganizerService {
       role: 'organizer',
     });
 
-    res.cookie('token', token, { httpOnly: false, secure: true });
+    res.cookie('token', token, {
+      httpOnly: false,
+      secure: true,
+      sameSite: 'none',
+    });
 
     return { message: 'Login successful', organizerId: existingOrganizer.id };
   }

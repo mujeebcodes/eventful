@@ -161,7 +161,12 @@ export class EventService {
     }
     const event = await this.prismaService.event.findUnique({
       where: { id: eventId },
-      select: { title: true, availableTickets: true, participants: true },
+      select: {
+        title: true,
+        availableTickets: true,
+        participants: true,
+        when: true,
+      },
     });
 
     const user = await this.prismaService.user.findUnique({
@@ -194,8 +199,19 @@ export class EventService {
       );
     }
 
+    const reminderDate = this.calculateReminderDate(event.when, whenToRemind);
+    console.log(reminderDate);
+
+    const currentDate = new Date();
+    if (reminderDate <= currentDate) {
+      throw new HttpException(
+        'Reminder date cannot be in the past',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     await this.prismaService.enrollment.create({
-      data: { userId: currentUser.id, eventId, whenToRemind },
+      data: { userId: currentUser.id, eventId, whenToRemind: reminderDate },
     });
 
     await this.prismaService.event.update({
@@ -280,5 +296,37 @@ export class EventService {
       date1.getMonth() === date2.getMonth() &&
       date1.getDate() === date2.getDate()
     );
+  }
+
+  calculateReminderDate(eventDate: Date, whenToRemind: string): Date {
+    const reminderDate = new Date(eventDate);
+
+    const [number, unit] = whenToRemind.split(' ');
+
+    switch (unit.toLowerCase()) {
+      case 'minute':
+      case 'minutes':
+        reminderDate.setMinutes(reminderDate.getMinutes() - parseInt(number));
+        break;
+      case 'hour':
+      case 'hours':
+        reminderDate.setHours(reminderDate.getHours() - parseInt(number));
+        break;
+      case 'day':
+      case 'days':
+        reminderDate.setDate(reminderDate.getDate() - parseInt(number));
+        break;
+      case 'week':
+      case 'weeks':
+        reminderDate.setDate(reminderDate.getDate() - parseInt(number) * 7);
+        break;
+      default:
+        throw new HttpException(
+          'Invalid reminder unit',
+          HttpStatus.BAD_REQUEST,
+        );
+    }
+
+    return reminderDate;
   }
 }

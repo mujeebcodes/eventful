@@ -13,6 +13,8 @@ import * as redisStore from 'cache-manager-redis-store';
 
 import type { RedisClientOptions } from 'redis';
 
+import { NotificationModule } from './notification/notification.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -25,6 +27,7 @@ import type { RedisClientOptions } from 'redis';
       isGlobal: true,
       ttl: 30 * 1000,
     }),
+    NotificationModule,
   ],
   controllers: [],
   providers: [PrismaService, { provide: APP_GUARD, useClass: ThrottlerGuard }],

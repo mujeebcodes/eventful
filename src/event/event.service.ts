@@ -7,11 +7,13 @@ import { promises as fsPromises } from 'fs';
 import * as path from 'path';
 import { cloudinary } from 'src/imageUploads/cloudinary.config';
 import { Cache } from 'cache-manager';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class EventService {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly mailerService: MailerService,
     @Inject('CACHE_MANAGER') private cacheManager: Cache,
   ) {}
 
@@ -328,5 +330,40 @@ export class EventService {
     }
 
     return reminderDate;
+  }
+
+  async getDueReminders(): Promise<any[]> {
+    const currentDate = new Date();
+    const enrollments = await this.prismaService.enrollment.findMany({
+      where: {
+        whenToRemind: {
+          lte: currentDate,
+        },
+      },
+      include: {
+        user: { select: { email: true } },
+        event: { select: { title: true } },
+      },
+    });
+    return enrollments;
+  }
+
+  async sendReminders(): Promise<void> {
+    try {
+      const enrollments = await this.getDueReminders();
+      if (enrollments) {
+        for (const enrollment of enrollments) {
+          this.mailerService.sendMail({
+            to: enrollment.user.email,
+            from: process.env.MY_EMAIL,
+            subject: 'Reminder for upcoming event',
+            text: `Dear ${enrollment.user.firstname},\n\nThis is a reminder for the upcoming event, ${enrollment.event.title} on ${enrollment.event.when}.`,
+          });
+          console.log(`Reminder email sent to ${enrollment.user.email}`);
+        }
+      }
+    } catch (error) {
+      console.log(`Error sending reminders: ${error.message}`);
+    }
   }
 }

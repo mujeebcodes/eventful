@@ -213,7 +213,11 @@ export class EventService {
     }
 
     await this.prismaService.enrollment.create({
-      data: { userId: currentUser.id, eventId, whenToRemind: reminderDate },
+      data: {
+        userId: currentUser.id,
+        eventId,
+        whenToRemind: reminderDate.toISOString(),
+      },
     });
 
     await this.prismaService.event.update({

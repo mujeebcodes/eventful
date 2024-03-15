@@ -1,16 +1,16 @@
 
 
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
 model Organizer {
-  id String @unique @default(uuid())
+  id String @id @default(uuid())  @map("_id")
   organizationName String
   logo String
   email String @unique
@@ -23,7 +23,7 @@ model Organizer {
 }
 
 model User {
-  id String @unique @default(uuid())
+  id String @id @default(uuid())  @map("_id")
   firstname String
   lastname String
   email String @unique
@@ -34,7 +34,7 @@ model User {
 }
 
 model Event {
-  id String @unique @default(uuid())
+  id String @id @default(uuid())  @map("_id")
   title String
   description String
   eventImg String
@@ -51,7 +51,7 @@ model Event {
 }
 
 model Enrollment {
-  id String @unique @default(uuid())
+  id String @id @default(uuid())  @map("_id")
   user User @relation(fields: [userId], references: [id])
   userId String
   event Event @relation(fields: [eventId], references: [id])

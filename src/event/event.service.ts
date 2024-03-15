@@ -341,7 +341,7 @@ export class EventService {
     const enrollments = await this.prismaService.enrollment.findMany({
       where: {
         whenToRemind: {
-          lte: currentDate,
+          lte: currentDate.toDateString(),
         },
       },
       include: {

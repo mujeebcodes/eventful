@@ -83,7 +83,11 @@ export class EventService {
     if (events.length < 1) {
       throw new HttpException('No events scheduled', HttpStatus.NOT_FOUND);
     }
-    return events;
+
+    const scheduledEvents = events.filter(
+      (event) => event.eventStatus === 'scheduled',
+    );
+    return scheduledEvents;
   }
 
   async getEvent(id: string) {
@@ -116,6 +120,7 @@ export class EventService {
     eventId: string,
     currentOrganizerId: string,
     updateEventDto: UpdateEventDto,
+    eventImg?: Express.Multer.File,
   ) {
     const event = await this.getEvent(eventId);
 
@@ -129,10 +134,29 @@ export class EventService {
         HttpStatus.FORBIDDEN,
       );
     }
+    let updateData = { ...updateEventDto };
+
+    if (eventImg) {
+      const tempFilePath = path.join(__dirname, '../imageUploads/tempFile.png');
+
+      await fsPromises.writeFile(tempFilePath, eventImg.buffer);
+      const logoUpload = await cloudinary.uploader.upload(tempFilePath, {
+        resource_type: 'auto',
+        folder: 'eventful/events',
+      });
+
+      const imgUrl = logoUpload.secure_url;
+      updateData = {
+        ...updateData,
+        eventImg: imgUrl,
+      };
+    }
+
+    updateData.availableTickets = Number(updateData.availableTickets);
 
     return await this.prismaService.event.update({
       where: { id: eventId },
-      data: updateEventDto,
+      data: updateData,
     });
   }
 

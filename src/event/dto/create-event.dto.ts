@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 
 enum Status {
+  pending = 'pending',
   scheduled = 'scheduled',
   completed = 'completed',
 }
@@ -20,6 +21,9 @@ export class CreateEventDto {
   @IsNotEmpty({ message: 'Description cannot be empty' })
   @IsString({ message: 'Description must be a string' })
   readonly description: string;
+
+  @IsString({ message: 'Venue must be a string' })
+  readonly eventImg?: string;
 
   @IsNotEmpty({ message: 'Venue cannot be empty' })
   @IsString({ message: 'Venue must be a string' })

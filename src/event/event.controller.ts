@@ -72,15 +72,19 @@ export class EventController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('eventImg'))
   updateEvent(
     @Param('id') eventId: string,
     @User('id') currentOrganizerId: string,
     @Body() updateEventDto: UpdateEventDto,
+    @UploadedFile() eventImg?: Express.Multer.File,
   ) {
+    console.log(updateEventDto);
     return this.eventService.updateEvent(
       eventId,
       currentOrganizerId,
       updateEventDto,
+      eventImg,
     );
   }
 

@@ -26,6 +26,7 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @ApiTags('Users')
 @Controller('users')
@@ -66,6 +67,7 @@ export class UserController {
   }
 
   @Get('current-user')
+  @SkipThrottle()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(CacheInterceptor)
   async getProfile(@User('id') currentUserId: string) {

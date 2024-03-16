@@ -17,7 +17,7 @@ model Organizer {
   phone String
   password String
   bio String
-  events Event[]
+  events Event[] 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt()
 }
@@ -54,7 +54,7 @@ model Enrollment {
   id String @id @default(uuid())  @map("_id")
   user User @relation(fields: [userId], references: [id])
   userId String
-  event Event @relation(fields: [eventId], references: [id])
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
   eventId String
   enrollmentDate DateTime @default(now())
   whenToRemind DateTime

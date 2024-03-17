@@ -226,7 +226,6 @@ export class EventService {
     }
 
     const reminderDate = this.calculateReminderDate(event.when, whenToRemind);
-    console.log(reminderDate);
 
     const currentDate = new Date();
     if (reminderDate <= currentDate) {

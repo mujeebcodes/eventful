@@ -19,7 +19,25 @@ import { UserDecoratorType } from 'src/decorators/types/userDecorator.type';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SkipThrottle } from '@nestjs/throttler';
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiBody,
+  ApiConflictResponse,
+  ApiConsumes,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+  ApiUnprocessableEntityResponse,
+} from '@nestjs/swagger';
+import {
+  ApiErrorMessage,
+  ApiSuccessMessage,
+  EventResponse,
+} from 'src/api-responses/user.response';
 
 @ApiTags('Events')
 @Controller('events')
@@ -27,6 +45,40 @@ export class EventController {
   constructor(private readonly eventService: EventService) {}
 
   @Post()
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Creates a new event. Requires valid JWT event organizer authorization',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        eventImg: {
+          type: 'string',
+          format: 'binary',
+        },
+        venue: { type: 'string' },
+        when: { type: 'string' },
+        availableTickets: {
+          type: 'number',
+        },
+        eventStatus: { type: 'string' },
+        category: { type: 'string' },
+      },
+    },
+  })
+  @ApiCreatedResponse({
+    description: 'Returns a success message if successful',
+    type: ApiSuccessMessage,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'returns an error code & message if unauthorized',
+    type: ApiErrorMessage,
+  })
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('eventImg'))
   createEvent(
@@ -38,6 +90,33 @@ export class EventController {
   }
 
   @Post(':id/enroll')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Enrolls a user in an event. Requires valid JWT user authorization',
+  })
+  @ApiOkResponse({
+    description: 'Returns a success message if successful',
+    type: ApiSuccessMessage,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'returns an error code & message if unauthorized',
+    type: ApiErrorMessage,
+  })
+  @ApiConflictResponse({
+    description:
+      'returns an error code & message if user already enrolled in the event',
+    type: ApiErrorMessage,
+  })
+  @ApiUnprocessableEntityResponse({
+    description: 'returns an error code & message if event is sold out',
+    type: ApiErrorMessage,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'returns an error code & message if user tries tp set an unrealistic reminder',
+    type: ApiErrorMessage,
+  })
   @UseGuards(JwtAuthGuard)
   enrollUser(
     @User() currentUser: UserDecoratorType,
@@ -48,6 +127,24 @@ export class EventController {
   }
 
   @Delete('enrollment/:id')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      "Cancels a user's enrollment in an event. Requires valid JWT user authorization",
+  })
+  @ApiOkResponse({
+    description: 'Returns a success message if successful',
+    type: ApiSuccessMessage,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'returns an error code & message if unauthorized',
+    type: ApiErrorMessage,
+  })
+  @ApiNotFoundResponse({
+    description:
+      'returns an error code & message if the enrollment id is invalid',
+    type: ApiErrorMessage,
+  })
   @UseGuards(JwtAuthGuard)
   cancelUserEnrollment(
     @User() currentUser: UserDecoratorType,
@@ -56,21 +153,78 @@ export class EventController {
     return this.eventService.cancelUserEnrollment(currentUser, enrollmentId);
   }
 
+  @Get()
+  @ApiOperation({
+    summary: 'Gets all scheduled events. Does not require any authorization',
+  })
+  @ApiOkResponse({
+    description: 'Returns an array of all scheduled events',
+    type: [EventResponse],
+  })
+  @ApiNotFoundResponse({
+    description: 'returns an error message if no event returned',
+    type: ApiErrorMessage,
+  })
   @SkipThrottle()
   @UseInterceptors(CacheInterceptor)
-  @Get()
   findAll() {
     return this.eventService.getAllEvents();
   }
 
+  @Get(':id')
+  @ApiOperation({
+    summary:
+      'Gets a single scheduled event. Does not require any authorization',
+  })
+  @ApiOkResponse({
+    description: 'Returns a scheduled event',
+    type: EventResponse,
+  })
+  @ApiNotFoundResponse({
+    description: 'returns an error message if no event returned',
+    type: ApiErrorMessage,
+  })
   @SkipThrottle()
   @UseInterceptors(CacheInterceptor)
-  @Get(':id')
   getEvent(@Param('id') id: string) {
     return this.eventService.getEvent(id);
   }
 
   @Patch(':id')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Updates an event. Requires valid JWT event organizer authorization & must be from the organizer of the event',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string' },
+        description: { type: 'string' },
+        eventImg: {
+          type: 'string',
+          format: 'binary',
+        },
+        venue: { type: 'string' },
+        when: { type: 'string' },
+        availableTickets: {
+          type: 'number',
+        },
+        eventStatus: { type: 'string' },
+        category: { type: 'string' },
+      },
+    },
+  })
+  @ApiOkResponse({
+    description: 'Returns a success message if successful',
+    type: ApiSuccessMessage,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'returns an error code & message if unauthorized',
+    type: ApiErrorMessage,
+  })
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('eventImg'))
   updateEvent(
@@ -89,6 +243,24 @@ export class EventController {
   }
 
   @Patch('checkin/:eventId/:userId/:enrollmentId')
+  @ApiOperation({
+    summary:
+      'Checks in a user through QR code scan. Requires valid JWT event organizer authorization',
+  })
+  @ApiOkResponse({
+    description: 'Returns a success message if successful',
+    type: ApiSuccessMessage,
+  })
+  @ApiBadRequestResponse({
+    description:
+      'returns an error code & message if trying to check in before date of event',
+    type: ApiErrorMessage,
+  })
+  @ApiUnauthorizedResponse({
+    description:
+      'returns an error message if the user is not enrolled in the event',
+    type: ApiErrorMessage,
+  })
   checkInUser(
     @Param('eventId') eventId: string,
     @Param('userId') userId: string,
@@ -98,6 +270,23 @@ export class EventController {
   }
 
   @Delete(':id')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary:
+      'Deletes/cancels an event. Requires valid JWT event organizer authorization & from the organizer of the event',
+  })
+  @ApiOkResponse({
+    description: 'Returns a success message if successful',
+    type: ApiSuccessMessage,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'returns an error code & message if unauthorized',
+    type: ApiErrorMessage,
+  })
+  @ApiNotFoundResponse({
+    description: 'returns an error message if the event id is invalid',
+    type: ApiErrorMessage,
+  })
   @UseGuards(JwtAuthGuard)
   cancelEvent(
     @Param('id') eventId: string,

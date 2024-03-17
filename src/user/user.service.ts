@@ -33,7 +33,7 @@ export class UserService {
       return { message: 'User created successfully' };
     } catch (error) {
       throw new HttpException(
-        'Unable to sign up',
+        error.message || 'Unknown error occurred',
         HttpStatus.UNPROCESSABLE_ENTITY,
       );
     }

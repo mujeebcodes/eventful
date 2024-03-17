@@ -174,8 +174,8 @@ export class OrganizerService {
     return { organizerAnalytics };
   }
 
-  getOrganizerProfile(organizerId: string) {
-    return this.prismaService.organizer.findUnique({
+  async getOrganizerProfile(organizerId: string) {
+    return await this.prismaService.organizer.findUnique({
       where: { id: organizerId },
       select: {
         id: true,

@@ -22,7 +22,7 @@ export class CreateEventDto {
   @IsString({ message: 'Description must be a string' })
   readonly description: string;
 
-  @IsString({ message: 'Venue must be a string' })
+  @IsString()
   readonly eventImg?: string;
 
   @IsNotEmpty({ message: 'Venue cannot be empty' })

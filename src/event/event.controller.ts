@@ -84,9 +84,9 @@ export class EventController {
   createEvent(
     @User() user: UserDecoratorType,
     @UploadedFile() eventImg: Express.Multer.File,
-    @Body() createEventDto: CreateEventDto,
+    @Body() body,
   ) {
-    return this.eventService.createEvent(user, eventImg, createEventDto);
+    return this.eventService.createEvent(user, eventImg, body);
   }
 
   @Post(':id/enroll')

@@ -3,13 +3,12 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { CreateOrganizerDto } from './organizer/dto/create-organizer.dto';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: 'https://eventful-udoh.onrender.com',
+    origin: 'https://eventful-client-nine.vercel.app/',
     credentials: true,
   });
 

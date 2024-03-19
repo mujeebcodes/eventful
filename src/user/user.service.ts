@@ -129,7 +129,17 @@ export class UserService {
         id: true,
         userId: true,
         user: true,
-        event: true,
+        event: {
+          select: {
+            id: true,
+            title: true,
+            description: true,
+            venue: true,
+            when: true,
+            organizer: { select: { organizationName: true } },
+            eventImg: true,
+          },
+        },
         enrollmentDate: true,
       },
     });

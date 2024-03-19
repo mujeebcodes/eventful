@@ -9,6 +9,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: 'https://eventful-client-nine.vercel.app',
+    // origin: 'http://localhost:5173',
     credentials: true,
   });
 

@@ -40,7 +40,7 @@ Main features include:
 
 ```bash
 # Clone this repository
-git clone https://github.com/your-username/your-repository.git
+git clone https://github.com/mujeebcodes/eventful.git
 
 # Navigate to the project directory
 cd your-repository

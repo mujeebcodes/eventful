@@ -100,7 +100,7 @@ export class OrganizerService {
       role: 'organizer',
     });
 
-    res.cookie('orgtoken', token, {
+    res.cookie('token', token, {
       httpOnly: false,
       secure: true,
       sameSite: 'none',
@@ -121,7 +121,7 @@ export class OrganizerService {
       );
     }
 
-    res.clearCookie('orgtoken');
+    res.clearCookie('token');
     return { message: 'Logged out successfully' };
   }
 

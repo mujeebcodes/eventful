@@ -8,8 +8,6 @@
 4. [Getting started](#getting-started)
 5. [Usage](#usage)
 6. [API Endpoints](#api-endpoints)
-7. [Testing](#testing)
-8. [Contributing](#contributing)
 
 ## Introduction
 
@@ -19,6 +17,7 @@ Eventful is a comprehensive event management platform built with NestJS and Type
 
 - NestJS
 - TypeScript
+- MongoDB
 - Prisma ORM
 - Cloudinary
 - Redis (optional)
